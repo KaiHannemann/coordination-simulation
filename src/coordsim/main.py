@@ -9,6 +9,10 @@ from coordsim.simulation.simulatorparams import SimulatorParams
 import coordsim.network.dummy_data as dummy_data
 import logging
 import time
+import os
+import sys
+sys.path.append(os.path.abspath('../bachelorarbeit'))
+from Implementation.Adapter import Adapter
 
 
 log = logging.getLogger(__name__)
@@ -39,6 +43,8 @@ def main():
     # TODO: make configurable via CLI
     sf_placement = dummy_data.triangle_placement
     schedule = dummy_data.triangle_schedule
+    adapter = Adapter()
+    adapter.setup()
 
     # Create the simulator parameters object with the provided args
     params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed, sf_placement=sf_placement,
@@ -53,7 +59,10 @@ def main():
 
     # Run the simpy environment for the specified duration
     env.run(until=args.duration)
-
+    simulator.params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed,
+                                       sf_placement=adapter.sent_trigger("Shutdown", sf_placement),
+                                       schedule=schedule)
+    env.run(until=2*args.duration)
     # Record endtime and running_time metrics
     end_time = time.time()
     metrics.running_time(start_time, end_time)
