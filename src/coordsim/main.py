@@ -41,10 +41,9 @@ def main():
 
     # use dummy placement and schedule for running simulator without algorithm
     # TODO: make configurable via CLI
-    sf_placement = dummy_data.triangle_placement
-    schedule = dummy_data.triangle_schedule
+    sf_placement = dummy_data.placement
+    schedule = dummy_data.schedule
     adapter = Adapter()
-    adapter.setup()
 
     # Create the simulator parameters object with the provided args
     params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed, sf_placement=sf_placement,
@@ -58,17 +57,19 @@ def main():
     simulator.start()
 
     # Run the simpy environment for the specified duration
+    env.run(until=args.duration/2)
+    # Do some fault injection
+    simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
+    simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
+    simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
     env.run(until=args.duration)
-    simulator.params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed,
-                                       sf_placement=adapter.sent_trigger("Shutdown", sf_placement),
-                                       schedule=schedule)
-    env.run(until=2*args.duration)
     # Record endtime and running_time metrics
     end_time = time.time()
     metrics.running_time(start_time, end_time)
 
     # dump all metrics
     log.info(metrics.metrics)
+    log.info(simulator.params.sf_placement)
 
 
 # parse CLI args (when using simulator as stand-alone, not triggered through the interface)
