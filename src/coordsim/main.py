@@ -9,6 +9,7 @@ from coordsim.simulation.simulatorparams import SimulatorParams
 import coordsim.network.dummy_data as dummy_data
 import logging
 import time
+import copy
 import os
 import sys
 sys.path.append(os.path.abspath('../bachelorarbeit'))
@@ -41,8 +42,8 @@ def main():
 
     # use dummy placement and schedule for running simulator without algorithm
     # TODO: make configurable via CLI
-    sf_placement = dummy_data.placement
-    schedule = dummy_data.schedule
+    sf_placement = copy.deepcopy(dummy_data.placement)
+    schedule = copy.deepcopy(dummy_data.schedule)
     adapter = Adapter()
 
     # Create the simulator parameters object with the provided args
@@ -57,11 +58,16 @@ def main():
     simulator.start()
 
     # Run the simpy environment for the specified duration
-    env.run(until=args.duration/2)
+    env.run(until=args.duration/4)
     # Do some fault injection
     simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
+    simulator.params.schedule = adapter.sent_trigger("Schedule", schedule=simulator.params.schedule)
+    env.run(until=args.duration/2)
     simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
+    simulator.params.schedule = adapter.sent_trigger("Schedule", schedule=simulator.params.schedule)
+    env.run(until=3*args.duration/4)
     simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
+    simulator.params.schedule = adapter.sent_trigger("Schedule", schedule=simulator.params.schedule)
     env.run(until=args.duration)
     # Record endtime and running_time metrics
     end_time = time.time()
@@ -69,6 +75,9 @@ def main():
 
     # dump all metrics
     log.info(metrics.metrics)
+    log.info(dummy_data.schedule)
+    log.info(simulator.params.schedule)
+    log.info(dummy_data.placement)
     log.info(simulator.params.sf_placement)
 
 
