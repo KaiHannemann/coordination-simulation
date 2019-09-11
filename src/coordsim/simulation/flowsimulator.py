@@ -1,6 +1,7 @@
 import logging
 import random
 import numpy as np
+from functools import wraps
 from coordsim.network.flow import Flow
 from coordsim.metrics import metrics
 
@@ -22,6 +23,20 @@ class FlowSimulator:
         self.env = env
         self.params = params
         self.total_flow_count = 0
+
+    """    # TODO can this be done as a decorator for other functions
+    def failure_dec(func):
+        @wraps(func)
+        def failure(self, flow, sfc):
+            if random.random() >= 0.7:
+                self.params = self.params.adapter.timed_failure(simulator=self, kind="Shutdown")
+            return func(self, flow, sfc)
+        return failure"""
+
+    def failure(self):
+        if random.random() >= 0.9:
+            log.info("Shutdown")
+            self.params = self.params.adapter.timed_failure(simulator=self, kind="Shutdown")
 
     def start(self):
         """
@@ -99,6 +114,7 @@ class FlowSimulator:
             metrics.dropped_flow()
             self.env.exit()
 
+    # @failure_dec
     def pass_flow(self, flow, sfc):
         """
         Passes the flow to the next node to begin processing.
@@ -111,6 +127,7 @@ class FlowSimulator:
         instead of pass_flow(). The position of the flow within the SFC is determined using current_position
         attribute of the flow object.
         """
+        self.failure()
         sf = sfc[flow.current_position]
         next_node = self.get_next_node(flow, sf)
         yield self.env.process(self.forward_flow(flow, next_node))
@@ -123,6 +140,7 @@ class FlowSimulator:
         """
         Get next node using weighted probabilites from the scheduler
         """
+        log.info(self.params)
         schedule = self.params.schedule
         # Check if scheduling rule exists
         if (flow.current_node_id in schedule) and flow.sfc in schedule[flow.current_node_id]:
