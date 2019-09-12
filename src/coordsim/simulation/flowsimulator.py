@@ -4,6 +4,7 @@ import numpy as np
 from functools import wraps
 from coordsim.network.flow import Flow
 from coordsim.metrics import metrics
+from coordsim.reader.reader import shortest_paths
 
 log = logging.getLogger(__name__)
 
@@ -24,19 +25,14 @@ class FlowSimulator:
         self.params = params
         self.total_flow_count = 0
 
-    """    # TODO can this be done as a decorator for other functions
-    def failure_dec(func):
-        @wraps(func)
-        def failure(self, flow, sfc):
-            if random.random() >= 0.7:
-                self.params = self.params.adapter.timed_failure(simulator=self, kind="Shutdown")
-            return func(self, flow, sfc)
-        return failure"""
-
     def failure(self):
-        if random.random() >= 0.9:
-            log.info("Shutdown")
-            self.params = self.params.adapter.timed_failure(simulator=self, kind="Shutdown")
+        if random.random() >= 0.95:
+            kind = random.choice(["Shutdown", "Schedule", "Delay"])
+            log.warning("Altering: " + kind)
+            self.params.adapter.timed_failure(simulator=self, kind=kind)
+            # This is only needed if no placement alg is been used
+            if kind == "Delay" or kind == "Connection":
+                shortest_paths(self.params.network)
 
     def start(self):
         """
@@ -140,7 +136,6 @@ class FlowSimulator:
         """
         Get next node using weighted probabilites from the scheduler
         """
-        log.info(self.params)
         schedule = self.params.schedule
         # Check if scheduling rule exists
         if (flow.current_node_id in schedule) and flow.sfc in schedule[flow.current_node_id]:

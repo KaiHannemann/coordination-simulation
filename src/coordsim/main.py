@@ -44,11 +44,10 @@ def main():
     # TODO: make configurable via CLI
     sf_placement = copy.deepcopy(dummy_data.placement)
     schedule = copy.deepcopy(dummy_data.schedule)
-    adapter = Adapter()
 
     # Create the simulator parameters object with the provided args
-    params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed, sf_placement=sf_placement,
-                             schedule=schedule)
+    params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed,
+                             adapter=Adapter(), sf_placement=sf_placement, schedule=schedule)
     log.info(params)
 
     # Create a FlowSimulator object, pass the SimPy environment and params objects
@@ -58,16 +57,6 @@ def main():
     simulator.start()
 
     # Run the simpy environment for the specified duration
-    env.run(until=args.duration/4)
-    # Do some fault injection
-    simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
-    simulator.params.schedule = adapter.sent_trigger("Schedule", schedule=simulator.params.schedule)
-    env.run(until=args.duration/2)
-    simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
-    simulator.params.schedule = adapter.sent_trigger("Schedule", schedule=simulator.params.schedule)
-    env.run(until=3*args.duration/4)
-    simulator.params.sf_placement = adapter.sent_trigger("Shutdown", simulator.params.sf_placement)
-    simulator.params.schedule = adapter.sent_trigger("Schedule", schedule=simulator.params.schedule)
     env.run(until=args.duration)
     # Record endtime and running_time metrics
     end_time = time.time()
@@ -75,10 +64,8 @@ def main():
 
     # dump all metrics
     log.info(metrics.metrics)
-    log.info(dummy_data.schedule)
-    log.info(simulator.params.schedule)
-    log.info(dummy_data.placement)
-    log.info(simulator.params.sf_placement)
+    for edge in simulator.params.network.edges:
+        log.info(edge)
 
 
 # parse CLI args (when using simulator as stand-alone, not triggered through the interface)

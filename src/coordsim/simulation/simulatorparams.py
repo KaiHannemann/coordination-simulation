@@ -9,7 +9,7 @@ other parameters for the simulator.
 
 
 class SimulatorParams:
-    def __init__(self, network, ing_nodes, sfc_list, sf_list, config, seed, schedule={}, sf_placement={}):
+    def __init__(self, network, ing_nodes, sfc_list, sf_list, config, seed, adapter, schedule={}, sf_placement={}):
         # Seed for the random generator: int
         self.seed = seed
         # NetworkX network object: DiGraph
@@ -20,6 +20,8 @@ class SimulatorParams:
         self.sfc_list = sfc_list
         # List of every SF and it's properties (e.g. processing_delay): defaultdict(None)
         self.sf_list = sf_list
+        # Adapter to connect Simian Army
+        self.adapter = adapter
 
         # read dummy placement and schedule if specified
         # Flow forwarding schedule: dict
