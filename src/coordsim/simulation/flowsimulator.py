@@ -27,12 +27,11 @@ class FlowSimulator:
 
     def failure(self):
         if random.random() >= 0.95:
-            kind = random.choice(["Shutdown", "Schedule", "Delay"])
-            log.warning("Altering: " + kind)
-            self.params.adapter.timed_failure(simulator=self, kind=kind)
+            log.warning("FI")
+            self.params.adapter.timed_failure(simulator=self)
             # This is only needed if no placement alg is been used
-            if kind == "Delay" or kind == "Connection":
-                shortest_paths(self.params.network)
+            self.params.network.graph['shortest_paths'] = None
+            shortest_paths(self.params.network)
 
     def start(self):
         """

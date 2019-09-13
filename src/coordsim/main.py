@@ -64,8 +64,6 @@ def main():
 
     # dump all metrics
     log.info(metrics.metrics)
-    for edge in simulator.params.network.edges:
-        log.info(edge)
 
 
 # parse CLI args (when using simulator as stand-alone, not triggered through the interface)
