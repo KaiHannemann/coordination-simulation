@@ -168,8 +168,11 @@ class FlowSimulator:
         """
         path_delay = 0
         if flow.current_node_id != next_node:
-            path_delay = self.params.network.graph['shortest_paths'][(flow.current_node_id, next_node)][1]
-
+            try:
+                path_delay = self.params.network.graph['shortest_paths'][(flow.current_node_id, next_node)][1]
+            except KeyError:
+                # Nothing to do there the flow will be dropped afterwards
+                pass
         # Metrics calculation for path delay. Flow's end2end delay is also incremented.
         metrics.add_path_delay(path_delay)
         flow.end2end_delay += path_delay
