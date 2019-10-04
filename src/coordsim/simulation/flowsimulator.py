@@ -26,12 +26,10 @@ class FlowSimulator:
         self.total_flow_count = 0
 
     def failure(self):
-        if random.random() >= 0.95:
-            log.warning("FI")
-            self.params.adapter.timed_failure(simulator=self)
-            # This is only needed if no placement alg is been used
-            self.params.network.graph['shortest_paths'] = None
-            shortest_paths(self.params.network)
+        self.params.adapter.loop_failure(simulator=self)
+        # This is only needed if no placement alg is been used
+        # self.params.network.graph['shortest_paths'] = None
+        # shortest_paths(self.params.network)
 
     def start(self):
         """
@@ -42,6 +40,7 @@ class FlowSimulator:
         nodes_list = [n[0] for n in self.params.network.nodes.items()]
         log.info("Using nodes list {}\n".format(nodes_list))
         log.info("Total of {} ingress nodes available\n".format(len(self.params.ing_nodes)))
+        self.env.process(self.failure())
         for node in self.params.ing_nodes:
             node_id = node[0]
             self.env.process(self.generate_flow(node_id))
@@ -122,7 +121,6 @@ class FlowSimulator:
         instead of pass_flow(). The position of the flow within the SFC is determined using current_position
         attribute of the flow object.
         """
-        self.failure()
         sf = sfc[flow.current_position]
         next_node = self.get_next_node(flow, sf)
         yield self.env.process(self.forward_flow(flow, next_node))
