@@ -26,7 +26,7 @@ class FlowSimulator:
         self.total_flow_count = 0
 
     def failure(self):
-        self.params.adapter.loop_failure(simulator=self)
+        yield self.env.process(self.params.adapter.loop_failure(simulator=self))
         # This is only needed if no placement alg is been used
         # self.params.network.graph['shortest_paths'] = None
         # shortest_paths(self.params.network)
