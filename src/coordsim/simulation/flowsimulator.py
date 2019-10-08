@@ -26,7 +26,7 @@ class FlowSimulator:
         self.total_flow_count = 0
 
     def failure(self):
-        yield self.env.process(self.params.adapter.loop_failure(simulator=self))
+        self.params.adapter.loop_failure(simulator=self)
         # This is only needed if no placement alg is been used
         # self.params.network.graph['shortest_paths'] = None
         # shortest_paths(self.params.network)
@@ -40,7 +40,7 @@ class FlowSimulator:
         nodes_list = [n[0] for n in self.params.network.nodes.items()]
         log.info("Using nodes list {}\n".format(nodes_list))
         log.info("Total of {} ingress nodes available\n".format(len(self.params.ing_nodes)))
-        self.env.process(self.failure())
+        self.failure()
         for node in self.params.ing_nodes:
             node_id = node[0]
             self.env.process(self.generate_flow(node_id))
