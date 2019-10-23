@@ -15,7 +15,8 @@ test_requirements = [
 ]
 
 dependency_links = [
-    'git+https://github.com/RealVNF/coord-env-interface'
+    'git+https://github.com/RealVNF/coord-env-interface',
+    'git+https://git.cs.upb.de/kaiha/bachelorarbeit'
 ]
 
 setup(
