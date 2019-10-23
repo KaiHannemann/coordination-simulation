@@ -10,9 +10,6 @@ import coordsim.network.dummy_data as dummy_data
 import logging
 import time
 import copy
-import os
-import sys
-sys.path.append(os.path.abspath('../bachelorarbeit'))
 from Implementation.Adapter import Adapter
 
 

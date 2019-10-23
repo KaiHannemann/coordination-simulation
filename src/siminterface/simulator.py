@@ -10,6 +10,7 @@ import numpy
 import simpy
 from spinterface import SimulatorAction, SimulatorInterface, SimulatorState
 from coordsim.writer.writer import ResultWriter
+from Implementation.Adapter import Adapter
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +39,7 @@ class Simulator(SimulatorInterface):
         self.env = simpy.Environment()
 
         # Instantiate the parameter object for the simulator.
-        self.params = SimulatorParams(self.network, self.ing_nodes, self.sfc_list, self.sf_list, self.config, seed)
+        self.params = SimulatorParams(self.network, self.ing_nodes, self.sfc_list, self.sf_list, self.config, seed, adapter=Adapter())
         self.duration = self.params.run_duration
         # Get and plant random seed
         self.seed = seed
