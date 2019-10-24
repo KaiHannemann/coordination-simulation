@@ -6,7 +6,7 @@ requirements = [
     'pyyaml>=5.1',
     'numpy',
     'coord-interface',
-    'simian-army'
+    'simianarmy'
 ]
 
 test_requirements = [
