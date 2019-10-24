@@ -46,7 +46,7 @@ def main():
     params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed,
                              adapter=Adapter(), sf_placement=sf_placement, schedule=schedule)
     log.info(params)
-
+    params.adapter.metrics.reset()
     # Create a FlowSimulator object, pass the SimPy environment and params objects
     simulator = FlowSimulator(env, params)
 
@@ -61,6 +61,7 @@ def main():
 
     # dump all metrics
     log.info(metrics.metrics)
+    log.info(params.adapter.metrics.metrics)
 
 
 # parse CLI args (when using simulator as stand-alone, not triggered through the interface)
