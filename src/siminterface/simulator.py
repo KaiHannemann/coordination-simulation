@@ -10,7 +10,7 @@ import numpy
 import simpy
 from spinterface import SimulatorAction, SimulatorInterface, SimulatorState
 from coordsim.writer.writer import ResultWriter
-from Implementation.Adapter import Adapter
+from simian-army.Adapter import Adapter
 logger = logging.getLogger(__name__)
 
 

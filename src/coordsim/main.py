@@ -10,7 +10,7 @@ import coordsim.network.dummy_data as dummy_data
 import logging
 import time
 import copy
-from Implementation.Adapter import Adapter
+from simian-army.Adapter import Adapter
 
 
 log = logging.getLogger(__name__)
