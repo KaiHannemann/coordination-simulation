@@ -5,7 +5,8 @@ requirements = [
     'geopy',
     'pyyaml>=5.1',
     'numpy',
-    'coord-interface'
+    'coord-interface',
+    'simianarmy'
 ]
 
 test_requirements = [
