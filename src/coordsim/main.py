@@ -1,17 +1,18 @@
-import argparse
-import simpy
-import random
-import numpy
-from coordsim.simulation.flowsimulator import FlowSimulator
-from coordsim.reader import reader
-from coordsim.metrics import metrics
-from coordsim.simulation.simulatorparams import SimulatorParams
-import coordsim.network.dummy_data as dummy_data
-import logging
-import time
 import copy
+import logging
+import random
+
+import argparse
+import numpy
+import simpy
+import time
 from simianarmy.Adapter import Adapter
 
+import coordsim.network.dummy_data as dummy_data
+from coordsim.metrics import metrics
+from coordsim.reader import reader
+from coordsim.simulation.flowsimulator import FlowSimulator
+from coordsim.simulation.simulatorparams import SimulatorParams
 
 log = logging.getLogger(__name__)
 
