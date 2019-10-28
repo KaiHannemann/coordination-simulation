@@ -6,6 +6,7 @@ import yaml
 import math
 from collections import defaultdict
 import importlib
+import csv
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +18,18 @@ Network parsing module.
 - Reads and parses network files into NetworkX.
 - Reads and parses network yaml files and gets placement and SFC and SFs.
 """
+
+
+def get_trace(trace_file):
+    """
+    Parse the trace file that the simulator will use to generate traffic.
+    """
+    with open(trace_file) as f:
+        trace_rows = csv.DictReader(f)
+        traces = []
+        for row in trace_rows:
+            traces.append(dict(row))
+    return traces
 
 
 def get_config(config_file):
@@ -63,7 +76,7 @@ def get_sf(sf_file, resource_functions_path):
     with open(sf_file) as yaml_stream:
         sf_data = yaml.load(yaml_stream, Loader=yaml.FullLoader)
 
-    # Configureable default mean and stdev defaults
+    # Configurable default mean and stddev defaults
     default_processing_delay_mean = 1.0
     default_processing_delay_stdev = 1.0
     def default_resource_function(x): return x
@@ -86,8 +99,7 @@ def get_sf(sf_file, resource_functions_path):
         else:
             sf_list[sf_name]["resource_function_id"] = 'default'
             sf_list[sf_name]["resource_function"] = default_resource_function
-            log.info(
-                f'No resource function specified for SF {sf_name}. Default resource function will be used instead.')
+            log.debug(f'No resource function specified for SF {sf_name}. Default resource function will be used.')
     return sf_list
 
 
@@ -207,3 +219,9 @@ def read_network(file, node_cap=None, link_cap=None):
             ing_nodes.append(node)
 
     return networkx_network, ing_nodes
+
+
+def reset_cap(network):
+    for node in network.nodes.items():
+        network.nodes[node[0]]['remaining_cap'] = network.nodes[node[0]]['cap']
+        network.nodes[node[0]]['available_sf'] = {}

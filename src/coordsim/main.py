@@ -1,25 +1,25 @@
-import copy
-import logging
-import random
-
 import argparse
-import numpy
 import simpy
+import random
+import numpy
+from coordsim.simulation.flowsimulator import FlowSimulator
+from coordsim.reader import reader
+from coordsim.metrics import metrics
+from coordsim.simulation.simulatorparams import SimulatorParams
+import coordsim.network.dummy_data as dummy_data
+from coordsim.trace_processor.trace_processor import TraceProcessor
+import logging
 import time
+import os
 from simianarmy.Adapter import Adapter
 
-import coordsim.network.dummy_data as dummy_data
-from coordsim.metrics import metrics
-from coordsim.reader import reader
-from coordsim.simulation.flowsimulator import FlowSimulator
-from coordsim.simulation.simulatorparams import SimulatorParams
 
 log = logging.getLogger(__name__)
 
 
 def main():
     args = parse_args()
-    metrics.reset()
+    metrics.reset_metrics()
     start_time = time.time()
     logging.basicConfig(level=logging.INFO)
 
@@ -34,20 +34,27 @@ def main():
     network, ing_nodes = reader.read_network(args.network, node_cap=10, link_cap=10)
 
     # Getting current SFC list, and the SF list of each SFC, and config
+
+    # use dummy placement and schedule for running simulator without algorithm
+    # TODO: make configurable via CLI
+    sf_placement = dummy_data.triangle_placement
+    schedule = dummy_data.triangle_schedule
+
+    # Getting current SFC list, and the SF list of each SFC, and config
     sfc_list = reader.get_sfc(args.sf)
     sf_list = reader.get_sf(args.sf, args.sfr)
     config = reader.get_config(args.config)
 
-    # use dummy placement and schedule for running simulator without algorithm
-    # TODO: make configurable via CLI
-    sf_placement = copy.deepcopy(dummy_data.placement)
-    schedule = copy.deepcopy(dummy_data.schedule)
-
     # Create the simulator parameters object with the provided args
-    params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, args.seed,
-                             adapter=Adapter(), sf_placement=sf_placement, schedule=schedule)
+    params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, adapter=Adapter(), sf_placement=sf_placement,
+                             schedule=schedule)
     log.info(params)
-    params.adapter.metrics.reset()
+
+    if 'trace_path' in config:
+        trace_path = os.path.join(os.getcwd(), config['trace_path'])
+        trace = reader.get_trace(trace_path)
+        TraceProcessor(params, env, trace)
+        log.info("Using trace "+config['trace_path'])
     # Create a FlowSimulator object, pass the SimPy environment and params objects
     simulator = FlowSimulator(env, params)
 
@@ -56,6 +63,7 @@ def main():
 
     # Run the simpy environment for the specified duration
     env.run(until=args.duration)
+
     # Record endtime and running_time metrics
     end_time = time.time()
     metrics.running_time(start_time, end_time)
@@ -77,6 +85,8 @@ def parse_args():
     parser.add_argument('-n', '--network', required=True, dest='network',
                         help="The GraphML network file that specifies the nodes and edges of the network.")
     parser.add_argument('-c', '--config', required=True, dest='config', help="Path to the simulator config file.")
+    parser.add_argument('-t', '--trace', required=False, dest='trace', default=None,
+                        help="Provide a CSV trace file to configure the traffic the simulator is generating.")
     parser.add_argument('-s', '--seed', required=False, default=random.randint(0, 9999), dest='seed', type=int,
                         help="Random seed")
     return parser.parse_args()
@@ -84,3 +94,4 @@ def parse_args():
 
 if __name__ == '__main__':
     main()
+
