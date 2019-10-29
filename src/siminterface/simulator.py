@@ -48,7 +48,7 @@ class Simulator(SimulatorInterface):
 
         # Instantiate the parameter object for the simulator.
 
-        self.params = SimulatorParams(self.network, self.ing_nodes, self.sfc_list, self.sf_list, self.config, seed, adapter=Adapter())
+        self.params = SimulatorParams(self.network, self.ing_nodes, self.sfc_list, self.sf_list, self.config, adapter=Adapter())
 
         if self.params.use_states and 'trace_path' in self.config:
             logger.warning('Two state model and traces are both activated, thi will cause unexpected behaviour!')
