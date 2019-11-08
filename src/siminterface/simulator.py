@@ -12,6 +12,7 @@ from spinterface import SimulatorAction, SimulatorInterface, SimulatorState
 from coordsim.writer.writer import ResultWriter
 from simianarmy.Adapter import Adapter
 from coordsim.trace_processor.trace_processor import TraceProcessor
+import copy
 logger = logging.getLogger(__name__)
 
 
@@ -127,9 +128,9 @@ class Simulator(SimulatorInterface):
         # uniits (1 run time), 2nd run call will also run for 100 more time units but value of "until=" is now 200.
         runtime_steps = self.duration * self.run_times
         logger.debug("Running simulator until time step %s", runtime_steps)
-        self.simulator.params.adapter.metrics.data((list(self.simulator.params.network.edges), self.simulator.params.sf_placement))
+        self.simulator.params.adapter.metrics.data((list(self.simulator.params.network.edges), copy.deepcopy(self.simulator.params.sf_placement)))
         self.env.run(until=runtime_steps)
-        self.simulator.params.adapter.metrics.data((list(self.simulator.params.network.edges), self.simulator.params.sf_placement))
+        self.simulator.params.adapter.metrics.data((list(self.simulator.params.network.edges), copy.deepcopy(self.simulator.params.sf_placement)))
 
         # Parse the NetworkX object into a dict format specified in SimulatorState. This is done to account
         # for changing node remaining capacities.
