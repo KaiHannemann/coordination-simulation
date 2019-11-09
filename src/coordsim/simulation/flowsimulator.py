@@ -26,7 +26,7 @@ class FlowSimulator:
         self.total_flow_count = 0
 
     def failure(self):
-        self.params.adapter.loop_failure(simulator=self)
+        self.params.adapter.loop_failures(simulator=self)
         # This is only needed if no placement alg is been used
         # self.params.network.graph['shortest_paths'] = None
         # shortest_paths(self.params.network)
@@ -40,7 +40,7 @@ class FlowSimulator:
         nodes_list = [n[0] for n in self.params.network.nodes.items()]
         log.info("Using nodes list {}\n".format(nodes_list))
         log.info("Total of {} ingress nodes available\n".format(len(self.params.ing_nodes)))
-        self.env.process(self.failure())
+        self.failure()
         for node in self.params.ing_nodes:
             node_id = node[0]
             self.env.process(self.generate_flow(node_id))
@@ -49,24 +49,25 @@ class FlowSimulator:
         """
         Generate flows at the ingress nodes.
         """
-        while True:
+        while self.params.inter_arr_mean[node_id] is not None:
             self.total_flow_count += 1
 
             # set normally distributed flow data rate
             flow_dr = np.random.normal(self.params.flow_dr_mean, self.params.flow_dr_stdev)
 
-            # if "deterministic = True" use deterministic flow size and inter-arrival times (eg, for debugging)
-            if self.params.deterministic:
-                # Exponentially distributed random inter arrival rate using a user set (or default) mean
-                #
-                # use deterministic, fixed inter-arrival time for now
-                inter_arr_time = self.params.inter_arr_mean
-                flow_size = self.params.flow_size_shape
-            # else use randomly distributed values (default)
+            # set deterministic or random flow arrival times and flow sizes according to config
+            if self.params.deterministic_arrival:
+                inter_arr_time = self.params.inter_arr_mean[node_id]
             else:
-                inter_arr_time = random.expovariate(self.params.inter_arr_mean)
+                # Poisson arrival -> exponential distributed inter-arrival time
+                inter_arr_time = random.expovariate(lambd=1.0/self.params.inter_arr_mean[node_id])
+
+            if self.params.deterministic_size:
+                flow_size = self.params.flow_size_shape
+            else:
                 # heavy-tail flow size
                 flow_size = np.random.pareto(self.params.flow_size_shape) + 1
+
             # Skip flows with negative flow_dr or flow_size values
             if flow_dr <= 0.00 or flow_size <= 0.00:
                 continue
@@ -79,7 +80,7 @@ class FlowSimulator:
             flow = Flow(str(self.total_flow_count), flow_sfc, flow_dr, flow_size, creation_time,
                         current_node_id=node_id)
             # Update metrics for the generated flow
-            metrics.generated_flow()
+            metrics.generated_flow(flow, node_id)
             # Generate flows and schedule them at ingress node
             self.env.process(self.init_flow(flow))
             yield self.env.timeout(inter_arr_time)
@@ -121,7 +122,12 @@ class FlowSimulator:
         instead of pass_flow(). The position of the flow within the SFC is determined using current_position
         attribute of the flow object.
         """
+
+        # set current sf of flow
         sf = sfc[flow.current_position]
+        flow.current_sf = sf
+        metrics.add_requesting_flow(flow)
+
         next_node = self.get_next_node(flow, sf)
         yield self.env.process(self.forward_flow(flow, next_node))
 
@@ -194,8 +200,6 @@ class FlowSimulator:
 
         log.info("Flow {} STARTED PROCESSING at node {} for processing. Time: {}"
                  .format(flow.flow_id, flow.current_node_id, self.env.now))
-        # Metrics: Add flow request for sf at node regardless of whether it is processed or not.
-        metrics.add_requesting_flow(flow, current_node_id, sf)
 
         if sf in self.params.sf_placement[current_node_id]:
             current_sf = flow.current_sf
@@ -231,6 +235,8 @@ class FlowSimulator:
                 self.params.network.nodes[current_node_id]['available_sf'][sf]['load'] += flow.dr
                 # Set remaining node capacity
                 self.params.network.nodes[current_node_id]['remaining_cap'] = node_cap - demanded_total_capacity
+                # Set max node usage
+                metrics.calc_max_node_usage(current_node_id, demanded_total_capacity)
                 # Just for the sake of keeping lines small, the node_remaining_cap is updated again.
                 node_remaining_cap = self.params.network.nodes[current_node_id]["remaining_cap"]
 

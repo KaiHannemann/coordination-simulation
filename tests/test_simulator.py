@@ -25,7 +25,7 @@ class TestFlowSimulator(TestCase):
         Setup test environment
         """
         logging.basicConfig(level=logging.ERROR)
-        metrics.reset()
+        metrics.reset_metrics()
 
         self.env = simpy.Environment()
         # Configure simulator parameters
@@ -38,7 +38,7 @@ class TestFlowSimulator(TestCase):
         schedule = dummy_data.triangle_schedule
 
         # Initialize Simulator and SimulatoParams objects
-        self.simulator_params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config, SEED,
+        self.simulator_params = SimulatorParams(network, ing_nodes, sfc_list, sf_list, config,
                                                 sf_placement=sf_placement, schedule=schedule)
         self.flow_simulator = FlowSimulator(self.env, self.simulator_params)
         self.flow_simulator.start()

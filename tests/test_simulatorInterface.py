@@ -10,6 +10,7 @@ NETWORK_FILE = "params/networks/triangle.graphml"
 SERVICE_FUNCTIONS_FILE = "params/services/3sfcs.yaml"
 RESOURCE_FUNCTION_PATH = "params/services/resource_functions"
 CONFIG_FILE = "params/config/sim_config.yaml"
+TRACE_FILE = "params/traces/simple_trace.csv"
 
 SIMULATOR_MODULE_NAME = "siminterface.simulator"
 SIMULATOR_CLS_NAME = "Simulator"
@@ -27,8 +28,9 @@ class TestSimulatorInterface(TestCase):
         create simulator for test cases
         """
         # TODO: replace SimulatorInterface with implementation
-        self.simulator = SIMULATOR_CLS(TEST_MODE)
-        self.simulator.init(NETWORK_FILE, SERVICE_FUNCTIONS_FILE, CONFIG_FILE, 1234, resource_functions_path=RESOURCE_FUNCTION_PATH)
+        self.simulator = SIMULATOR_CLS(NETWORK_FILE, SERVICE_FUNCTIONS_FILE, CONFIG_FILE, test_mode=TEST_MODE,
+                                       resource_functions_path=RESOURCE_FUNCTION_PATH)
+        self.simulator.init(1234)
 
     def test_apply(self):
         # test if placement and schedule can be applied
@@ -247,7 +249,7 @@ class TestSimulatorInterface(TestCase):
             }
         """
         network_stats = simulator_state.network_stats
-        self.assertIs(len(network_stats), 8)
+        self.assertIs(len(network_stats), 10)
         self.assertIn('total_flows', network_stats)
         self.assertIn('successful_flows', network_stats)
         self.assertIn('dropped_flows', network_stats)

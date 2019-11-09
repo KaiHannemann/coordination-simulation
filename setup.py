@@ -5,7 +5,8 @@ requirements = [
     'geopy',
     'pyyaml>=5.1',
     'numpy',
-    'coord-interface'
+    'coord-interface',
+    'simianarmy'
 ]
 
 test_requirements = [
@@ -15,7 +16,8 @@ test_requirements = [
 ]
 
 dependency_links = [
-    'git+https://github.com/RealVNF/coord-env-interface'
+    'git+https://github.com/RealVNF/coord-env-interface',
+    'git+https://git.cs.upb.de/kaiha/bachelorarbeit'
 ]
 
 setup(
@@ -30,7 +32,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     install_requires=requirements + test_requirements,
-    test_requirements=test_requirements,
+    tests_require=test_requirements,
     zip_safe=False,
     entry_points={
         'console_scripts': [
